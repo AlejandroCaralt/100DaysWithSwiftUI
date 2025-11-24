@@ -8,14 +8,16 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State var countries = ["Estonia", "France", "Germany", "Ireland", "Italy", "Nigeria", "Poland", "Spain", "UK", "Ukraine", "US"].shuffled()
-    @State var correctAnswer = Int.random(in: 0...2)
-    @State var showScore = false
-    @State var scoreTitle = ""
-    @State var score = 0
-    @State var gameState = 0
+    @State private var countries = ["Estonia", "France", "Germany", "Ireland", "Italy", "Nigeria", "Poland", "Spain", "UK", "Ukraine", "US"].shuffled()
+    @State private var correctAnswer = Int.random(in: 0...2)
+    @State private var showScore = false
+    @State private var scoreTitle = ""
+    @State private var score = 0
+    @State private var gameState = 0
     let gameShuffles = 8
-    @State var gameReset = false
+    @State private var gameReset = false
+    @State private var spinAmount = [0.0, 0.0, 0.0]
+    @State private var indexButtonTapped: Int? = nil
 
     var body: some View {
         ZStack {
@@ -40,10 +42,19 @@ struct ContentView: View {
                     }
                     
                     ForEach(0..<3) { number in
+
+                        let scaleAmount: CGFloat = (indexButtonTapped == nil || indexButtonTapped! == number) ? 1.0 : 0.2
+
                         Button {
+                            withAnimation(.spring) {
+                                spinAmount[number] += 360
+                            }
                             flagTapped(number)
+                            indexButtonTapped = number
                         } label: {
                             FlagImage(imageName: countries[number])
+                                .rotation3DEffect(Angle(degrees: spinAmount[number]), axis: (x: 0, y: 1, z: 0))
+                                .scaleEffect(scaleAmount)
                         }
                     }
                 }
@@ -51,6 +62,7 @@ struct ContentView: View {
                 .padding(20)
                 .background(.regularMaterial)
                 .clipShape(.rect(cornerRadius: 20))
+                .animation(.easeIn, value: indexButtonTapped)
 
                 Spacer()
                 Spacer()
@@ -101,6 +113,7 @@ struct ContentView: View {
     func askQuestion() {
         countries.shuffle()
         correctAnswer = Int.random(in: 0...2)
+        indexButtonTapped = nil
     }
 
 }
