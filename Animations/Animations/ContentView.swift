@@ -60,7 +60,7 @@ struct New2ContentView: View {
     }
 }
 
-struct ContentView: View {
+struct DContentView: View {
     @State private var animationAmount = 0.0
 
     var body: some View {
@@ -93,7 +93,7 @@ struct NContentView: View {
     }
 }
 
-struct DContentView: View {
+struct LContentView: View {
     @State private var offSet = CGSize.zero
     
     var body: some View {
@@ -113,8 +113,8 @@ struct DContentView: View {
     }
 }
 
-struct XContentView: View {
-    let letters = Array("Hello SwiftUI")
+struct ContentView: View {
+    let letters = Array("DJ Killer")
     
     @State private var enabled = false
     @State private var dragAmount = CGSize.zero
