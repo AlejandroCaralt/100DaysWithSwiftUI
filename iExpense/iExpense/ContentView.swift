@@ -39,58 +39,67 @@ class Expenses {
 
 struct ContentView: View {
     @State private var expenses = Expenses()
-    @State private var showingAddExpense = false
 
     var body: some View {
         NavigationStack {
             List {
-                Section(header: Text("Personal")) {
-                    ForEach(expenses.items.filter({ expense in
-                        expense.type == "Personal"
-                    })) { item in
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text(item.name)
-                                    .font(.headline)
-                                Text(item.type)
+                if !expenses.items.filter({ expense in
+                    expense.type == "Personal"
+                }).isEmpty {
+                    Section(header: Text("Personal")) {
+                        ForEach(expenses.items.filter({ expense in
+                            expense.type == "Personal"
+                        })) { item in
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    Text(item.name)
+                                        .font(.headline)
+                                    Text(item.type)
+                                }
+                                
+                                Spacer()
+                                
+                                Text(item.amount, format: .currency(code: Locale.current.currencySymbol ?? "EURO"))
+                                    .foregroundStyle(amountColor(item.amount))
                             }
-                            
-                            Spacer()
-                            
-                            Text(item.amount, format: .currency(code: Locale.current.currencySymbol ?? "EURO"))
-                                .foregroundStyle(amountColor(item.amount))
                         }
+                        .onDelete(perform: removeItems)
                     }
-                    .onDelete(perform: removeItems)
                 }
-                Section(header: Text("Business")) {
-                    ForEach(expenses.items.filter({ expense in
-                        expense.type == "Business"
-                    })) { item in
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text(item.name)
-                                    .font(.headline)
-                                Text(item.type)
+                if !expenses.items.filter({ expense in
+                    expense.type == "Business"
+                }).isEmpty {
+                    Section(header: Text("Business")) {
+                        ForEach(expenses.items.filter({ expense in
+                            expense.type == "Business"
+                        })) { item in
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    Text(item.name)
+                                        .font(.headline)
+                                    Text(item.type)
+                                }
+                                
+                                Spacer()
+                                
+                                Text(item.amount, format: .currency(code: Locale.current.currencySymbol ?? "EURO"))
+                                    .foregroundStyle(amountColor(item.amount))
                             }
-                            
-                            Spacer()
-                            
-                            Text(item.amount, format: .currency(code: Locale.current.currencySymbol ?? "EURO"))
-                                .foregroundStyle(amountColor(item.amount))
                         }
+                        .onDelete(perform: removeItems)
                     }
-                    .onDelete(perform: removeItems)
                 }
             }
             .navigationTitle("iExpenses")
             .toolbar {
-                Button("Add Expense", systemImage: "plus") {
-                    showingAddExpense = true
+                NavigationLink() {
+                    AddView(expense: expenses)
+                } label: {
+                    HStack {
+                        Text("Add Expense")
+                        Image(systemName: "plus")
+                    }
                 }
-            }
-            .sheet(isPresented: $showingAddExpense) {
-                AddView(expense: expenses)
             }
         }
     }

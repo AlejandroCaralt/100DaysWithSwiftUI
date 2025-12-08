@@ -25,9 +25,7 @@ struct ContentView: View {
             ScrollView {
                 LazyVGrid(columns: gridToggle ? columns : columnList) {
                     ForEach(missions) { mission in
-                        NavigationLink {
-                            MissionView(mission: mission, astronauts: astronauts)
-                        } label: {
+                        NavigationLink(value: mission) {
                             VStack {
                                 Image(mission.image)
                                     .resizable()
@@ -69,6 +67,9 @@ struct ContentView: View {
                     }
                 }
             }
+            .navigationDestination(for: Mission.self, destination: { mission in
+                MissionView(mission: mission, astronauts: astronauts)
+            })
         }
     }
 }
