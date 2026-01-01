@@ -6,50 +6,34 @@
 //
 
 import SwiftUI
-import Observation
-
-struct ExpenseItem: Identifiable, Codable {
-    var id = UUID()
-    let name: String
-    let type: String
-    let amount: Double
-}
-
-@Observable
-class Expenses {
-    var items = [ExpenseItem]() {
-        didSet {
-            if let encoded = try? JSONEncoder().encode(items) {
-                UserDefaults.standard.set(encoded, forKey: "Items")
-            }
-        }
-    }
-    
-    init() {
-        if let saveItems = UserDefaults.standard.data(forKey: "Items") {
-            if let decodedItems = try? JSONDecoder().decode([ExpenseItem].self, from: saveItems) {
-                items = decodedItems
-                return
-            }
-        }
-
-        items = []
-    }
-}
+import SwiftData
 
 struct ContentView: View {
-    @State private var expenses = Expenses()
-
+    @Environment(\.modelContext) var modelContext
+    @Query var personalExpenses: [ExpenseItem]
+    @Query var bussinessExpenses: [ExpenseItem]
+    @State private var showingPersonalExpenses: Bool = true
+    @State private var showingBussinessExpenses: Bool = true
+    
+    init() {
+        _personalExpenses = Query(filter: #Predicate<ExpenseItem> { expense in
+            expense.type == "Personal"
+        }, sort: [
+            SortDescriptor<ExpenseItem>(\.name), SortDescriptor<ExpenseItem>(\.amount)
+        ])
+        _bussinessExpenses = Query(filter: #Predicate<ExpenseItem> { expense in
+            expense.type == "Business"
+        }, sort: [
+            SortDescriptor<ExpenseItem>(\.name), SortDescriptor<ExpenseItem>(\.amount)
+        ])
+    }
+    
     var body: some View {
         NavigationStack {
             List {
-                if !expenses.items.filter({ expense in
-                    expense.type == "Personal"
-                }).isEmpty {
+                if showingPersonalExpenses {
                     Section(header: Text("Personal")) {
-                        ForEach(expenses.items.filter({ expense in
-                            expense.type == "Personal"
-                        })) { item in
+                        ForEach(personalExpenses) { item in
                             HStack {
                                 VStack(alignment: .leading) {
                                     Text(item.name)
@@ -63,16 +47,12 @@ struct ContentView: View {
                                     .foregroundStyle(amountColor(item.amount))
                             }
                         }
-                        .onDelete(perform: removeItems)
+                        .onDelete(perform: removePersonalExpense)
                     }
                 }
-                if !expenses.items.filter({ expense in
-                    expense.type == "Business"
-                }).isEmpty {
+                if showingBussinessExpenses {
                     Section(header: Text("Business")) {
-                        ForEach(expenses.items.filter({ expense in
-                            expense.type == "Business"
-                        })) { item in
+                        ForEach(bussinessExpenses) { item in
                             HStack {
                                 VStack(alignment: .leading) {
                                     Text(item.name)
@@ -86,27 +66,54 @@ struct ContentView: View {
                                     .foregroundStyle(amountColor(item.amount))
                             }
                         }
-                        .onDelete(perform: removeItems)
+                        .onDelete(perform: removeBussinessExpense)
                     }
                 }
             }
             .navigationTitle("iExpenses")
             .toolbar {
                 NavigationLink() {
-                    AddView(expense: expenses)
+                    AddView()
                 } label: {
                     HStack {
                         Text("Add Expense")
                         Image(systemName: "plus")
                     }
                 }
+                
+                Menu("Sort", systemImage: "arrow.up.arrow.down") {
+                    Button("All") {
+                        showingPersonalExpenses = true
+                        showingBussinessExpenses = true
+                    }
+                    Button("Only Personal") {
+                        showingPersonalExpenses = true
+                        showingBussinessExpenses = false
+                    }
+                    Button("Only Bussiness") {
+                        showingPersonalExpenses = false
+                        showingBussinessExpenses = true
+                    }
+                }
             }
         }
     }
-    func removeItems(at offsets: IndexSet) {
-        expenses.items.remove(atOffsets: offsets)
+    
+    
+    func removePersonalExpense(at offsets: IndexSet) {
+        for offset in offsets {
+            let expense = personalExpenses[offset]
+            modelContext.delete(expense)
+        }
     }
-
+    
+    func removeBussinessExpense(at offsets: IndexSet) {
+        for offset in offsets {
+            let expense = bussinessExpenses[offset]
+            modelContext.delete(expense)
+        }
+    }
+    
     func amountColor(_ amount: Double) -> Color {
         if amount > 100 {
             return .green
